@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Recherche intelligente</title>
+</head>
+<body>
+  <h2>🔍 Rechercher une pièce automobile</h2>
+  <form id="textForm">
+    <input type="text" id="userText" placeholder="Ex: phare droit clio 3 2007" required>
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <h3>🎤 Ou enregistrez un vocal</h3>
+  <button id="startRecord">🎙️ Enregistrer</button>
+  <button id="stopRecord" disabled>🛑 Stop</button>
+
+  <audio id="audioPlayback" controls></audio>
+  <div id="response"></div>
+
+  <script>
+    const textForm = document.getElementById('textForm');
+    const responseDiv = document.getElementById('response');
+
+    textForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = document.getElementById('userText').value;
+      const res = await fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      const data = await res.json();
+      responseDiv.innerText = "🧠 Réponse IA : " + data.result;
+    });
+
+    let mediaRecorder, audioChunks = [];
+
+    document.getElementById('startRecord').onclick = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        document.getElementById('audioPlayback').src = URL.createObjectURL(audioBlob);
+
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'vocal.webm');
+
+        const res = await fetch('/audio', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        responseDiv.innerText = "🧠 Réponse IA : " + data.result;
+      };
+
+      document.getElementById('startRecord').disabled = true;
+      document.getElementById('stopRecord').disabled = false;
+    };
+
+    document.getElementById('stopRecord').onclick = () => {
+      mediaRecorder.stop();
+      document.getElementById('startRecord').disabled = false;
+      document.getElementById('stopRecord').disabled = true;
+    };
+  </script>
+</body>
+</html>
