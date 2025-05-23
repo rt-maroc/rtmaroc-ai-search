@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
@@ -13,9 +12,9 @@ const upload = multer({ dest: 'uploads/' });
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // pour héberger le HTML
+app.use(express.static(path.join(__dirname, 'public')));
 
-// === Route pour traiter le texte direct ===
+// Route texte direct
 app.post('/ask', async (req, res) => {
   const { message } = req.body;
 
@@ -40,7 +39,7 @@ app.post('/ask', async (req, res) => {
   }
 });
 
-// === Route pour le traitement du fichier vocal ===
+// Route traitement vocal
 app.post('/audio', upload.single('audio'), async (req, res) => {
   const audioPath = req.file.path;
 
@@ -77,9 +76,9 @@ app.post('/audio', upload.single('audio'), async (req, res) => {
     console.error(error.response?.data || error.message);
     res.status(500).send("Erreur traitement audio");
   } finally {
-    fs.unlinkSync(audioPath); // Supprimer le fichier après usage
+    fs.unlinkSync(audioPath);
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🟢 Serveur IA prêt sur http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🟢 Serveur IA prêt sur port ${PORT}`));
